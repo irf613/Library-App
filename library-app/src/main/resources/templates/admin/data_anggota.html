@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Anggota - Library Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { --primary: #4361ee; --light-bg: #f4f6f8; --card-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--light-bg); color: #2b2d42; }
+        
+        .navbar { background: #fff; box-shadow: 0 2px 15px rgba(0,0,0,0.03); padding: 1rem 0; }
+        .navbar-brand { font-weight: 800; color: var(--primary) !important; font-size: 1.5rem; }
+        .nav-link { font-weight: 600; color: #8d99ae !important; margin: 0 10px; transition: 0.3s; }
+        .nav-link.active { color: var(--primary) !important; }
+
+        .card-custom { border: none; border-radius: 16px; background: white; box-shadow: var(--card-shadow); overflow: hidden; }
+        
+        .table thead th { background-color: #f8f9fa; color: #8d99ae; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; padding: 15px; border: none;}
+        .table tbody td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #f0f0f0; }
+
+        /* Role Badges */
+        .badge-role-admin { background: #f3e8ff; color: #7e22ce; padding: 5px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; }
+        .badge-role-member { background: #e0e7ff; color: #4361ee; padding: 5px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; }
+        
+        .btn-delete { width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: #fee2e2; color: #ef233c; transition: 0.2s; }
+        .btn-delete:hover { background: #ef233c; color: white; }
+        
+        .user-avatar { width: 40px; height: 40px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #64748b; font-weight: 700; margin-right: 15px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/admin/dashboard"><i class="fas fa-book-open me-2"></i>Library<span class="text-dark">App</span></a>
+            <div class="navbar-nav me-auto ms-4">
+                <a class="nav-link" href="/admin/dashboard">Dashboard</a>
+                <a class="nav-link" href="/admin/buku">Data Buku</a>
+                <a class="nav-link" href="/admin/peminjaman">Transaksi</a>
+                <a class="nav-link active" href="/admin/anggota">Anggota</a>
+            </div>
+            <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-4">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="mb-4">
+            <h3 class="fw-bold mb-1">Daftar Pengguna</h3>
+            <p class="text-muted mb-0">Kelola akun admin dan anggota perpustakaan.</p>
+        </div>
+
+        <div class="card-custom">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">No</th>
+                            <th>Nama Lengkap</th>
+                            <th>Kontak</th>
+                            <th>Role / Peran</th>
+                            <th class="text-end pe-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="u, iter : ${listUser}">
+                            <td class="ps-4 text-muted fw-bold" th:text="${iter.count}">1</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark" th:text="${u.namaLengkap}">Nama</div>
+                                        <small class="text-muted" th:text="'@' + ${u.username}">@user</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-muted small"><i class="fas fa-phone me-1"></i> <span th:text="${u.noTelepon}">0812xx</span></span>
+                            </td>
+                            <td>
+                                <span class="badge-role-admin" th:if="${u.peran == 'ADMIN'}">ADMINISTRATOR</span>
+                                <span class="badge-role-member" th:if="${u.peran == 'ANGGOTA'}">ANGGOTA</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a th:if="${u.id != 1}" 
+                                   th:href="@{/admin/anggota/hapus/{id}(id=${u.id})}" 
+                                   class="btn-delete"
+                                   onclick="return confirm('Hapus user ini selamanya?');" title="Hapus User">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                                <span th:if="${u.id == 1}" class="badge bg-light text-muted border"><i class="fas fa-lock me-1"></i> Master</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

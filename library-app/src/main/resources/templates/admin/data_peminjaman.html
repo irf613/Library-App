@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Transaksi - Library Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { --primary: #4361ee; --light-bg: #f4f6f8; --card-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--light-bg); color: #2b2d42; }
+        
+        .navbar { background: #fff; box-shadow: 0 2px 15px rgba(0,0,0,0.03); padding: 1rem 0; }
+        .navbar-brand { font-weight: 800; color: var(--primary) !important; font-size: 1.5rem; }
+        .nav-link { font-weight: 600; color: #8d99ae !important; margin: 0 10px; transition: 0.3s; }
+        .nav-link.active { color: var(--primary) !important; }
+
+        .card-custom { border: none; border-radius: 16px; background: white; box-shadow: var(--card-shadow); overflow: hidden; }
+        
+        .table thead th { background-color: #f8f9fa; color: #8d99ae; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; padding: 15px; border: none;}
+        .table tbody td { padding: 10px; vertical-align: middle; border-bottom: 1px solid #f0f0f0; }
+        
+        /* Badges Style */
+        .badge-soft-warning { background: #fffbeb; color: #b45309; border-radius: 30px; padding: 6px 12px; }
+        .badge-soft-primary { background: #eff6ff; color: var(--primary); border-radius: 30px; padding: 6px 12px; } /* Tambahan buat Dipinjam */
+        .badge-soft-success { background: #dcfce7; color: #166534; border-radius: 30px; padding: 6px 12px; }
+        .badge-soft-danger { background: #fee2e2; color: #991b1b; border-radius: 30px; padding: 6px 12px; }
+        
+        .btn-primary-soft { background: #eff6ff; color: var(--primary); font-weight: 600; border: none; }
+        .btn-primary-soft:hover { background: var(--primary); color: white; }
+        
+        .btn-icon-check { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: #dcfce7; color: #166534; transition: 0.2s; border: none; }
+        .btn-icon-check:hover { background: #166534; color: white; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/admin/dashboard"><i class="fas fa-book-open me-2"></i>Library<span class="text-dark">App</span></a>
+            <div class="navbar-nav me-auto ms-4">
+                <a class="nav-link" href="/admin/dashboard">Dashboard</a>
+                <a class="nav-link" href="/admin/buku">Data Buku</a>
+                <a class="nav-link active" href="/admin/peminjaman">Transaksi</a>
+                <a class="nav-link" href="/admin/anggota">Anggota</a>
+            </div>
+            <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-4">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Riwayat Peminjaman</h3>
+                <p class="text-muted mb-0">Pantau buku yang keluar dan masuk di sini.</p>
+            </div>
+            
+            <a href="/admin/transaksi/tambah" class="btn btn-primary-soft px-4 py-2 rounded-pill">
+                <i class="fas fa-plus-circle me-2"></i>Catat Peminjaman
+            </a>
+            
+        </div>
+        <div class="card-custom">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">No</th>
+                            <th>Peminjam</th>
+                            <th>Buku Dipinjam</th>
+                            <th>Tanggal</th>
+                            <th>Status</th>
+                            <th>Denda</th>
+                            <th class="text-end pe-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p, iter : ${listPeminjaman}"> <td class="ps-4 text-muted fw-bold" th:text="${iter.count}">1</td>
+                            <td>
+                                <div class="fw-bold text-dark" th:text="${p.pengguna.namaLengkap}">User</div>
+                                <small class="text-muted" th:text="${p.pengguna.username}">@username</small>
+                            </td>
+                            <td>
+                                <div th:each="d : ${p.detailPeminjamanList}" class="d-flex align-items-center mb-1">
+                                    <i class="fas fa-book text-muted me-2 small"></i>
+                                    <span th:text="${d.buku.judul}" class="small fw-medium">Judul</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <span class="text-muted">Pinjam:</span> <span class="fw-medium" th:text="${p.tanggalPinjam}"></span><br>
+                                    <span class="text-muted">Balik:</span> <span class="fw-medium text-danger" th:text="${p.tenggatWaktu}"></span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge-soft-warning" th:if="${p.status == 'DIBOOKING'}"><i class="fas fa-bookmark me-1"></i> Booking</span>
+                                <span class="badge-soft-primary" th:if="${p.status == 'DIPINJAM'}"><i class="fas fa-clock me-1"></i> Dipinjam</span>
+                                <span class="badge-soft-success" th:if="${p.status == 'DIKEMBALIKAN'}"><i class="fas fa-check me-1"></i> Selesai</span>
+                                <span class="badge-soft-danger" th:if="${p.status == 'DIBATALKAN'}">Batal</span>
+                            </td>
+                            <td>
+                                <span class="badge-soft-danger" th:if="${p.estimasiDenda > 0}" th:text="'Rp ' + ${p.estimasiDenda}"></span>
+                                <span class="text-muted small" th:if="${p.estimasiDenda == 0}">-</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                
+                                <button th:if="${p.status == 'DIBOOKING'}" 
+                                        type="button" 
+                                        class="btn btn-sm btn-primary-soft rounded-pill px-3"
+                                        th:onclick="'bukaModalAmbil(' + ${p.id} + ')'">
+                                    <i class="fas fa-hand-holding me-1"></i> Ambil
+                                </button>
+
+                                <form th:if="${p.status == 'DIPINJAM'}" th:action="@{/admin/transaksi/selesai}" method="post" class="d-inline">
+                                    <input type="hidden" name="id" th:value="${p.id}">
+                                    <button type="submit" class="btn-icon-check" title="Proses Pengembalian" onclick="return confirm('Buku sudah dikembalikan?')">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+
+                                <span th:if="${p.status == 'DIKEMBALIKAN'}" class="text-muted small"><i class="fas fa-lock"></i></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div th:if="${listPeminjaman.isEmpty()}" class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted opacity-25 mb-3"></i>
+                <p class="text-muted">Belum ada transaksi.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAmbilBuku" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">Konfirmasi Pengambilan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <form th:action="@{/admin/transaksi/ambil}" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="inputIdTransaksi">
+                        
+                        <div class="alert alert-info small border-0 mb-3 bg-light text-primary">
+                            <i class="fas fa-info-circle me-1"></i> Status akan berubah menjadi <b>DIPINJAM</b>.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Tanggal Wajib Kembali</label>
+                            <input type="date" name="tenggatWaktu" id="inputTenggat" class="form-control" required>
+                            <div class="form-text">Default: 7 hari dari hari ini.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold" style="background: var(--primary); border:none;">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function bukaModalAmbil(idTransaksi) {
+            // 1. Masukkan ID ke input hidden di dalam modal
+            document.getElementById('inputIdTransaksi').value = idTransaksi;
+
+            // 2. Set Default Tanggal (Hari ini + 7 Hari)
+            var date = new Date();
+            date.setDate(date.getDate() + 7); // Tambah 7 hari
+            var dateString = date.toISOString().split('T')[0]; // Format jadi YYYY-MM-DD
+            
+            document.getElementById('inputTenggat').value = dateString;
+
+            // 3. Tampilkan Modal
+            var myModal = new bootstrap.Modal(document.getElementById('modalAmbilBuku'));
+            myModal.show();
+        }
+    </script>
+</body>
+</html>

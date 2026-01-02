@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard - Library Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { --primary: #4361ee; --light-bg: #f4f6f8; --text-dark: #2b2d42; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--light-bg); color: var(--text-dark); }
+        
+        .navbar { background: #fff; box-shadow: 0 2px 15px rgba(0,0,0,0.03); padding: 1rem 0; }
+        .navbar-brand { font-weight: 800; color: var(--primary) !important; font-size: 1.5rem; }
+        .nav-link { font-weight: 600; color: #8d99ae !important; margin: 0 10px; transition: 0.3s; }
+        .nav-link.active, .nav-link:hover { color: var(--primary) !important; }
+
+        .stat-card {
+            border: none; border-radius: 16px; background: #fff;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05); transition: 0.3s;
+            padding: 20px; position: relative; overflow: hidden; height: 100%;
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .stat-icon {
+            width: 50px; height: 50px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 15px;
+        }
+        .bg-icon-blue { background: #e0e7ff; color: #4361ee; }
+        .bg-icon-green { background: #dcfce7; color: #166534; }
+        .bg-icon-purple { background: #f3e8ff; color: #7e22ce; }
+        .bg-icon-orange { background: #ffedd5; color: #c2410c; }
+        .bg-icon-red { background: #fee2e2; color: #991b1b; }
+        
+        .stat-value { font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 5px; }
+        .stat-label { color: #8d99ae; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; }
+        .btn-link-custom { text-decoration: none; font-weight: 600; font-size: 0.85rem; color: var(--primary); display: block; margin-top: 10px;}
+
+        /* Format Duit */
+        .money { font-family: 'Consolas', monospace; letter-spacing: -1px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/admin/dashboard"><i class="fas fa-book-open me-2"></i>Library<span class="text-dark">App</span></a>
+            <div class="navbar-nav me-auto ms-4">
+                <a class="nav-link active" href="/admin/dashboard">Dashboard</a>
+                <a class="nav-link" href="/admin/buku">Data Buku</a>
+                <a class="nav-link" href="/admin/peminjaman">Transaksi</a>
+                <a class="nav-link" href="/admin/anggota">Anggota</a>
+            </div>
+            <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-4">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="mb-4">
+            <h2 class="fw-bold text-dark">Dashboard</h2>
+            <p class="text-muted">Statistik perpustakaan & pendapatan denda.</p>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4 col-xl-4">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="stat-value" th:text="${totalBuku}">0</div>
+                            <div class="stat-label">Total Buku</div>
+                        </div>
+                        <div class="stat-icon bg-icon-blue"><i class="fas fa-book"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-xl-4">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="stat-value" th:text="${totalPeminjaman}">0</div>
+                            <div class="stat-label">Total Transaksi</div>
+                        </div>
+                        <div class="stat-icon bg-icon-green"><i class="fas fa-exchange-alt"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-xl-4">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="stat-value" th:text="${totalAnggota}">0</div>
+                            <div class="stat-label">Anggota Aktif</div>
+                        </div>
+                        <div class="stat-icon bg-icon-purple"><i class="fas fa-users"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="stat-card bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label text-white-50">Total Denda Masuk</div>
+                            <div class="stat-value money" th:text="'Rp ' + ${#numbers.formatDecimal(dendaDibayar, 0, 'COMMA', 0, 'POINT')}">Rp 0</div>
+                        </div>
+                        <div class="stat-icon bg-white text-primary mb-0"><i class="fas fa-wallet"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                 <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label text-danger">Estimasi Denda Tertunda</div>
+                            <div class="stat-value text-danger money" th:text="'Rp ' + ${#numbers.formatDecimal(potensiDenda, 0, 'COMMA', 0, 'POINT')}">Rp 0</div>
+                        </div>
+                        <div class="stat-icon bg-icon-red mb-0"><i class="fas fa-exclamation-circle"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-8">
+                <div class="stat-card h-100">
+                    <h5 class="fw-bold mb-4">📊 Tren Peminjaman</h5>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="loanChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="stat-card h-100">
+                    <h5 class="fw-bold mb-4">📚 Status Koleksi</h5>
+                    <div style="position: relative; height: 250px; width: 100%; display: flex; justify-content: center;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small text-muted">
+                        Perbandingan buku yang sedang dipinjam vs tersedia di rak.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script th:inline="javascript">
+        // --- DATA GRAFIK 1 (BAR CHART) ---
+        var labels = /*[[${chartLabels}]]*/ [];
+        var dataValues = /*[[${chartValues}]]*/ [];
+
+        const ctx1 = document.getElementById('loanChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Transaksi',
+                    data: dataValues,
+                    backgroundColor: '#4361ee',
+                    borderRadius: 6,
+                    barThickness: 25
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5] } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // --- DATA GRAFIK 2 (DOUGHNUT CHART) ---
+        var dipinjam = /*[[${jmlDipinjam}]]*/ 0;
+        var tersedia = /*[[${jmlTersedia}]]*/ 0;
+
+        const ctx2 = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['Sedang Dipinjam', 'Tersedia di Rak'],
+                datasets: [{
+                    data: [dipinjam, tersedia],
+                    backgroundColor: [
+                        '#ef233c', // Merah (Dipinjam)
+                        '#4361ee'  // Hijau (Tersedia)
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, font: { family: 'Plus Jakarta Sans' } }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

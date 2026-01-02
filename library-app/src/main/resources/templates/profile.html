@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Profil Saya - LibraryApp</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f3f4f6; color: #333; }
+        .navbar { background: white; border-bottom: 1px solid #eee; }
+        
+        /* Sidebar Profil */
+        .profile-card {
+            background: white; border-radius: 16px; border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); text-align: center; padding: 40px 20px;
+        }
+        .avatar-circle {
+            width: 100px; height: 100px; background: #e0e7ff; color: #4361ee;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 700; margin: 0 auto 20px;
+        }
+        
+        /* Content Card */
+        .content-card {
+            background: white; border-radius: 16px; border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden;
+        }
+        
+        /* Tabs Keren */
+        .nav-tabs { border-bottom: 1px solid #eee; padding: 0 20px; }
+        .nav-link {
+            border: none; color: #666; font-weight: 600; padding: 20px 25px;
+            background: transparent; position: relative;
+        }
+        .nav-link.active {
+            color: #4361ee; background: transparent;
+        }
+        .nav-link.active::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%;
+            height: 3px; background: #4361ee; border-radius: 3px 3px 0 0;
+        }
+        .nav-link:hover { color: #4361ee; border: none; }
+
+        .tab-content { padding: 30px; }
+
+        /* List Buku */
+        .booking-item {
+            border: 1px solid #eee; border-radius: 12px; padding: 15px;
+            margin-bottom: 15px; display: flex; align-items: center; gap: 20px;
+            transition: 0.3s;
+        }
+        .booking-item:hover { background: #f9fafb; border-color: #d1d5db; }
+        .book-thumb {
+            width: 60px; height: 90px; object-fit: cover; border-radius: 6px;
+        }
+        
+        /* Animasi Alert Hilang */
+        .fade-out {
+            opacity: 0;
+            transition: opacity 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top shadow-sm px-lg-5">
+        <a class="navbar-brand fw-bold text-primary" href="/katalog">
+            <i class="fas fa-arrow-left me-2"></i> Kembali ke Katalog
+        </a>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                <div class="profile-card">
+                    <div class="avatar-circle">
+                        <span th:text="${#strings.substring(user.namaLengkap, 0, 1)}">A</span>
+                    </div>
+                    <h5 class="fw-bold mb-1" th:text="${user.namaLengkap}">Nama User</h5>
+                    <p class="text-muted mb-4" th:text="'@' + ${user.username}">@username</p>
+                    
+                    <div class="d-flex justify-content-center gap-4 text-start border-top pt-4">
+                        <div>
+                            <small class="text-muted d-block">Booking</small>
+                            <span class="fw-bold fs-5" th:text="${listBooking.size()}">0</span>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Riwayat</small>
+                            <span class="fw-bold fs-5" th:text="${listRiwayat.size()}">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="content-card">
+                    
+                    <div id="alertBox">
+                        <div th:if="${param.sukses}" class="alert alert-success m-3 rounded-3 border-0 shadow-sm">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span th:if="${#strings.equals(param.sukses, 'update')}">Profil berhasil diperbarui!</span>
+                            <span th:if="${#strings.equals(param.sukses, 'password')}">Password berhasil diganti!</span>
+                        </div>
+                        <div th:if="${param.gagal}" class="alert alert-danger m-3 rounded-3 border-0 shadow-sm">
+                            <i class="fas fa-times-circle me-2"></i>
+                            <span th:if="${#strings.equals(param.gagal, 'password_salah')}">Password lama salah!</span>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" id="booking-tab" data-bs-toggle="tab" data-bs-target="#booking-pane" type="button">
+                                <i class="fas fa-bookmark me-2"></i>Booking Aktif
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-pane" type="button">
+                                <i class="fas fa-history me-2"></i>Riwayat
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings-pane" type="button">
+                                <i class="fas fa-user-cog me-2"></i>Edit Profil
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="myTabContent">
+                        
+                        <div class="tab-pane fade show active" id="booking-pane">
+                            <div th:if="${listBooking.isEmpty()}" class="text-center py-5 text-muted">
+                                <i class="far fa-folder-open fa-3x mb-3 opacity-25"></i>
+                                <p>Belum ada buku yang dibooking.</p>
+                                <a href="/katalog" class="btn btn-sm btn-outline-primary rounded-pill">Cari Buku</a>
+                            </div>
+
+                            <div th:each="tx : ${listBooking}" class="booking-item">
+                                <img th:src="${tx.detailPeminjamanList[0].buku.gambar}" class="book-thumb" alt="Cover">
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold mb-1" th:text="${tx.detailPeminjamanList[0].buku.judul}">Judul Buku</h6>
+                                    <small class="text-muted">
+                                        Booking Tanggal: <span th:text="${tx.tanggalPinjam}"></span>
+                                    </small>
+                                    <br>
+                                    <span class="badge bg-warning text-dark mt-2">Menunggu Diambil</span>
+                                </div>
+                                <form th:action="@{/booking/cancel}" method="post">
+                                    <input type="hidden" name="bukuId" th:value="${tx.detailPeminjamanList[0].buku.id}" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill" onclick="return confirm('Yakin batal booking?')">
+                                        Batal
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="history-pane">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Buku</th>
+                                            <th>Tgl Pinjam</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="tx : ${listRiwayat}">
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <img th:src="${tx.detailPeminjamanList[0].buku.gambar}" style="width: 30px; height: 45px; object-fit: cover; border-radius: 4px;">
+                                                    <span class="fw-bold small" th:text="${tx.detailPeminjamanList[0].buku.judul}">Judul</span>
+                                                </div>
+                                            </td>
+                                            <td class="small" th:text="${tx.tanggalPinjam}">2023-01-01</td>
+                                            <td>
+                                                <span th:if="${tx.status == 'DIPINJAM'}" class="badge bg-primary">Sedang Dipinjam</span>
+                                                <span th:if="${tx.status == 'DIKEMBALIKAN'}" class="badge bg-success">Sudah Dikembalikan</span>
+                                                <span th:if="${tx.status == 'DIBATALKAN'}" class="badge bg-secondary">Dibatalkan</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div th:if="${listRiwayat.isEmpty()}" class="text-center py-4 text-muted small">
+                                    Belum ada riwayat peminjaman.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="settings-pane">
+                            
+                            <h6 class="fw-bold mb-3 text-primary">Informasi Pribadi</h6>
+                            <form th:action="@{/profile/update}" method="post" class="mb-5">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Nama Lengkap</label>
+                                        <input type="text" name="nama" class="form-control" th:value="${user.namaLengkap}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Username</label>
+                                        <input type="text" name="username" class="form-control" th:value="${user.username}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Email</label>
+                                        <input type="email" name="email" class="form-control" th:value="${user.email}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">No HP</label>
+                                        <input type="text" name="noHp" class="form-control" th:value="${user.noTelepon}">
+                                    </div>
+                                    <div class="col-12 text-end">
+                                        <button type="submit" class="btn btn-primary px-4 rounded-pill">Simpan Perubahan</button>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <hr>
+
+                            <h6 class="fw-bold mb-3 text-danger">Ganti Password</h6>
+                            <form th:action="@{/profile/password}" method="post">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Password Lama</label>
+                                        <input type="password" name="oldPassword" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Password Baru</label>
+                                        <input type="password" name="newPassword" class="form-control" required>
+                                    </div>
+                                    <div class="col-12 text-end">
+                                        <button type="submit" class="btn btn-outline-danger px-4 rounded-pill">Update Password</button>
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            // 1. Logic Tabs (Biar pas refresh tetap di tab terakhir yang dibuka)
+            var hash = window.location.hash;
+            if (hash) {
+                var triggerEl = document.querySelector('.nav-tabs button[data-bs-target="' + hash + '"]');
+                if(triggerEl) {
+                    var tab = new bootstrap.Tab(triggerEl);
+                    tab.show();
+                }
+            }
+
+            // 2. LOGIC PEMBERSIH URL & AUTO HIDE ALERT (SOLUSI MASALAH ABANG)
+            var alertBox = document.getElementById("alertBox");
+            if (alertBox && alertBox.innerHTML.trim() !== "") {
+                
+                // Hapus parameter ?sukses=... dari URL browser
+                var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.hash;
+                window.history.replaceState({}, document.title, cleanUrl);
+
+                // Hilangkan Alert pelan-pelan setelah 3 detik
+                setTimeout(function() {
+                    alertBox.classList.add('fade-out'); // Tambah class CSS buat efek transparan
+                    setTimeout(function() {
+                        alertBox.style.display = 'none'; // Hapus total dari layar
+                    }, 500); 
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
